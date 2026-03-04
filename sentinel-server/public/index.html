@@ -1796,6 +1796,8 @@
           </div>
           <video id="desk-tv" autoplay muted playsinline controls
             style="width:100%;height:100%;object-fit:contain;"></video>
+          <iframe id="desk-tv-frm" allow="autoplay; encrypted-media" allowfullscreen
+            style="width:100%;height:100%;border:0;display:none;"></iframe>
         </div>
         <!-- Ticker bottom -->
         <div id="ticker">
@@ -1948,37 +1950,15 @@
       let TV_STREAMS = [];
       let tvIdx = 0;
 
-      // MISSILE_ROUTES — static routes shown in the missiles panel (real spawning is via OREF)
-      const MISSILE_ROUTES = [
-        { from: [31.47, 34.53], to: [32.08, 34.78], c: '#ff2020', lbl: 'Gaza Strip → Tel Aviv', spd: 0.003, name: 'Qassam' },
-        { from: [31.47, 34.53], to: [31.80, 34.65], c: '#ff4400', lbl: 'Gaza Strip → Ashdod', spd: 0.003, name: 'Fadjr-5' },
-        { from: [33.27, 35.57], to: [32.82, 34.99], c: '#ff6600', lbl: 'Lebanon → Haifa', spd: 0.002, name: 'Zelzal-2' },
-        { from: [33.27, 35.57], to: [32.08, 34.78], c: '#ff8800', lbl: 'Lebanon → Tel Aviv', spd: 0.0015, name: 'Grad BM-21' },
-        { from: [35.68, 51.38], to: [32.08, 34.78], c: '#ff2020', lbl: 'Iran → Israel', spd: 0.0003, name: 'Shahab-3' },
-        { from: [15.35, 44.20], to: [24.70, 46.72], c: '#ff5500', lbl: 'Yemen → Riyadh', spd: 0.0004, name: 'Burkan-2H' },
-        { from: [50.40, 30.70], to: [50.45, 30.52], c: '#ff2020', lbl: 'Russia → Kyiv', spd: 0.002, name: 'Kh-101' },
-        { from: [50.40, 30.70], to: [49.00, 32.00], c: '#ff4400', lbl: 'Russia → Ukraine', spd: 0.0018, name: 'Iskander-M' },
-      ];
-
       async function loadStreams() {
-        try {
-          const r = await fetch('/api/streams', { signal: AbortSignal.timeout(6000) });
-          if (r.ok) {
-            TV_STREAMS = await r.json();
-            buildTVList();
-            const vid = 'desk-tv';
-            if (TV_STREAMS[0]) startHLS(TV_STREAMS[0].proxyUrl || TV_STREAMS[0].url, vid);
-          }
-        } catch (_) {
-          TV_STREAMS = [
-            { lbl: 'Al Jazeera Arabic', short: 'AJA', url: 'https://live-hls-web-aja.getaj.net/AJA/index.m3u8' },
-            { lbl: 'Sky News Arabia', short: 'SKY', url: 'https://skynewsarabia.akamaized.net/hls/live/2042880/skynewsarabia/master.m3u8' },
-            { lbl: 'France24 English', short: 'F24', url: 'https://f24hls-i.akamaihd.net/hls/live/2033925/F24_EN@526596/master.m3u8' },
-            { lbl: 'DW English', short: 'DWE', url: 'https://dwstream4-lh.akamaihd.net/z/dwtv_en@124105/manifest.m3u8' }
-          ];
-          buildTVList();
-          startHLS(TV_STREAMS[0].url, 'desk-tv');
-        }
+        TV_STREAMS = [
+          { lbl: 'Al Jazeera Arabic', short: 'AJA', yt: 'b3OjrXJCubE' },
+          { lbl: 'Sky News Arabia', short: 'SKY', yt: 'zP15aAh-D9w' },
+          { lbl: 'France24 English', short: 'F24', url: 'https://f24hls-i.akamaihd.net/hls/live/2033925/F24_EN@526596/master.m3u8' },
+          { lbl: 'DW English', short: 'DWE', url: 'https://dwstream4-lh.akamaihd.net/z/dwtv_en@124105/manifest.m3u8' }
+        ];
+        buildTVList();
+        playStream(0, 'desk-tv', 'desk-tv-frm');
       }
 
       /* ═══════════════════════════════════════
@@ -2031,6 +2011,27 @@
       const SEV_COL = { critical: '#ff2020', high: '#ffb020', medium: '#ffe040', info: '#00cfff' };
       const SEV_CLS = { critical: '', high: 'hi', medium: 'me', info: 'inf' };
       const SEV_PCT = { critical: 100, high: 68, medium: 42, info: 18 };
+
+      // Helper to cleanly get photos for any alert
+      function getAlertImageRawUrl(a) {
+        if (a.type === 'missile') return 'https://images.unsplash.com/photo-1612845663673-c62efd48bd3c?auto=format&fit=crop&q=80&w=600';
+        if (a.type === 'explosion') return 'https://images.unsplash.com/photo-1595188846399-528859cd0bde?auto=format&fit=crop&q=80&w=600';
+        if (a.type === 'siren' || a.sev === 'critical') return 'https://images.unsplash.com/photo-1588661833722-1de2304ceade?auto=format&fit=crop&q=80&w=600';
+        if (a.type === 'warning') return 'https://images.unsplash.com/photo-1579373903781-fd5c0c30c4cd?auto=format&fit=crop&q=80&w=600';
+        return 'https://images.unsplash.com/photo-1552084117-56a98a96e191?auto=format&fit=crop&q=80&w=600';
+      }
+
+      // MISSILE_ROUTES
+      const MISSILE_ROUTES = [
+        { from: [31.47, 34.53], to: [32.08, 34.78], c: '#ff2020', lbl: 'Gaza Strip → Tel Aviv', spd: 0.003, name: 'Qassam' },
+        { from: [31.47, 34.53], to: [31.80, 34.65], c: '#ff4400', lbl: 'Gaza Strip → Ashdod', spd: 0.003, name: 'Fadjr-5' },
+        { from: [33.27, 35.57], to: [32.82, 34.99], c: '#ff6600', lbl: 'Lebanon → Haifa', spd: 0.002, name: 'Zelzal-2' },
+        { from: [33.27, 35.57], to: [32.08, 34.78], c: '#ff8800', lbl: 'Lebanon → Tel Aviv', spd: 0.0015, name: 'Grad BM-21' },
+        { from: [35.68, 51.38], to: [32.08, 34.78], c: '#ff2020', lbl: 'Iran → Israel', spd: 0.0003, name: 'Shahab-3' },
+        { from: [15.35, 44.20], to: [24.70, 46.72], c: '#ff5500', lbl: 'Yemen → Riyadh', spd: 0.0004, name: 'Burkan-2H' },
+        { from: [50.40, 30.70], to: [50.45, 30.52], c: '#ff2020', lbl: 'Russia → Kyiv', spd: 0.002, name: 'Kh-101' },
+        { from: [50.40, 30.70], to: [49.00, 32.00], c: '#ff4400', lbl: 'Russia → Ukraine', spd: 0.0018, name: 'Iskander-M' },
+      ];
 
       /* ═══════════════════════════════════════
          ALERT MARKERS
@@ -2380,11 +2381,8 @@
             if (isNew) d.style.background = 'rgba(255,32,32,0.08)';
 
             // Generate visual context photos depending on threat
-            let imgH = '';
-            if (a.type === 'missile') imgH = '<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Fateh_110_%28cropped%29.jpg/320px-Fateh_110_%28cropped%29.jpg" class="acard-img">';
-            else if (a.type === 'explosion') imgH = '<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Explosion_at_the_Al-Askari_Mosque.jpg/320px-Explosion_at_the_Al-Askari_Mosque.jpg" class="acard-img">';
-            else if (a.type === 'siren' || a.sev === 'critical') imgH = '<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Air_raid_siren_in_Tel_Aviv.jpg/320px-Air_raid_siren_in_Tel_Aviv.jpg" class="acard-img">';
-            else imgH = '<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/IDF_soldier_with_Tavor.jpg/320px-IDF_soldier_with_Tavor.jpg" class="acard-img">';
+            let imgRaw = getAlertImageRawUrl(a);
+            let imgH = `<img src="${imgRaw}" class="acard-img">`;
 
             d.innerHTML = `${imgH}<div class="acard-flash"></div>
         <div class="acard-country">${a.country}${a.real ? ' <span style="color:var(--red);font-size:7px">● LIVE</span>' : ''}</div>
@@ -2411,7 +2409,8 @@
               const col = SEV_COL[a.sev] || '#00cfff';
               const ts = new Date().toTimeString().slice(0, 8);
               const isNew = (Date.now() - a.ts) < 5000;
-              const imgH = a.type === 'missile' ? '<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Fateh_110_%28cropped%29.jpg/320px-Fateh_110_%28cropped%29.jpg" style="width:100%;height:60px;object-fit:cover;margin-bottom:6px">' : a.type === 'explosion' ? '<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Explosion_at_the_Al-Askari_Mosque.jpg/320px-Explosion_at_the_Al-Askari_Mosque.jpg" style="width:100%;height:60px;object-fit:cover;margin-bottom:6px">' : a.type === 'siren' || a.sev === 'critical' ? '<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Air_raid_siren_in_Tel_Aviv.jpg/320px-Air_raid_siren_in_Tel_Aviv.jpg" style="width:100%;height:60px;object-fit:cover;margin-bottom:6px">' : '';
+              const imgRaw = getAlertImageRawUrl(a);
+              const imgH = `<img src="${imgRaw}" style="width:100%;height:60px;object-fit:cover;margin-bottom:6px">`;
 
               return `<div style="background:${isNew ? 'rgba(255,32,32,0.1)' : 'var(--bg3)'};border:1px solid var(--border);border-left:3px solid ${col};padding:10px;margin:6px 0;cursor:pointer;transition:all .2s" onclick="mapL.flyTo([${a.lat},${a.lng}],9,{duration:1.2})">
                 ${imgH}
@@ -2521,11 +2520,32 @@
         }
       }
 
+      function playStream(idx, vId, fId) {
+        tvIdx = idx;
+        const s = TV_STREAMS[idx]; if (!s) return;
+
+        const vid = document.getElementById(vId);
+        const frm = document.getElementById(fId);
+        if (!vid || !frm) return;
+
+        if (s.yt) {
+          vid.style.display = 'none';
+          frm.style.display = 'block';
+          if (hlsInst) { hlsInst.destroy(); hlsInst = null; }
+          vid.pause();
+          frm.src = 'https://www.youtube.com/embed/' + s.yt + '?autoplay=1&mute=1';
+        } else {
+          frm.style.display = 'none';
+          frm.src = '';
+          vid.style.display = 'block';
+          startHLS(s.url, vId);
+        }
+      }
+
       function selectTV(i) {
-        tvIdx = i;
-        const s = TV_STREAMS[i]; if (!s) return;
-        startHLS(s.url, 'desk-tv');
-        const el = document.getElementById('tv-strip-name'); if (el) el.textContent = '📺 ' + s.lbl.toUpperCase();
+        playStream(i, 'desk-tv', 'desk-tv-frm');
+        const s = TV_STREAMS[i];
+        const el = document.getElementById('tv-strip-name'); if (el && s) el.textContent = '📺 ' + s.lbl.toUpperCase();
         buildTVList();
       }
 
@@ -2760,14 +2780,16 @@
 
       function buildMobTV(body) {
         const s = TV_STREAMS[tvIdx];
+        if (!s) return;
         body.innerHTML = `<div style="font-family:var(--font-title);font-size:12px;letter-spacing:3px;color:var(--green);margin-bottom:8px">${s.short}</div>
     <div style="font-family:var(--font-data);font-size:13px;color:var(--white);margin-bottom:10px">${s.lbl}</div>
     <div style="background:#000;position:relative;">
       <video id="mob-tv" autoplay muted playsinline controls style="width:100%;max-height:220px;background:#000;display:block;"></video>
+      <iframe id="mob-tv-frm" allow="autoplay; encrypted-media" allowfullscreen style="width:100%;height:220px;border:0;display:none;"></iframe>
     </div>
     <div class="sec-hdr" style="margin-top:12px">SOURCES</div>
     ${TV_STREAMS.map((s2, i) => `<div class="tv-source-row ${i === tvIdx ? 'on' : ''}" style="margin-bottom:5px" onclick="selectMobTV(${i})">${s2.lbl}</div>`).join('')}`;
-        setTimeout(() => startHLS(s.proxyUrl || s.url, 'mob-tv'), 100);
+        setTimeout(() => playStream(tvIdx, 'mob-tv', 'mob-tv-frm'), 100);
       }
 
       function selectMobTV(i) { tvIdx = i; buildMobTV(document.getElementById('mob-drawer-body')); }
