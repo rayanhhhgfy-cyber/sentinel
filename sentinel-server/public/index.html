@@ -1952,8 +1952,10 @@
 
       async function loadStreams() {
         TV_STREAMS = [
-          { lbl: 'Al Jazeera Arabic', short: 'AJA', yt: 'b3OjrXJCubE' },
-          { lbl: 'Sky News Arabia', short: 'SKY', yt: 'zP15aAh-D9w' },
+          // UCfiwzLy-8yKzIbsmZTzxDgw is Al Jazeera Arabic
+          { lbl: 'Al Jazeera Arabic', short: 'AJA', ytChannel: 'UCfiwzLy-8yKzIbsmZTzxDgw' },
+          // UC1tgsS0Y0LvvK0uALXQ61sQ is Sky News Arabia
+          { lbl: 'Sky News Arabia', short: 'SKY', ytChannel: 'UC1tgsS0Y0LvvK0uALXQ61sQ' },
           { lbl: 'France24 English', short: 'F24', url: 'https://f24hls-i.akamaihd.net/hls/live/2033925/F24_EN@526596/master.m3u8' },
           { lbl: 'DW English', short: 'DWE', url: 'https://dwstream4-lh.akamaihd.net/z/dwtv_en@124105/manifest.m3u8' }
         ];
@@ -2012,13 +2014,13 @@
       const SEV_CLS = { critical: '', high: 'hi', medium: 'me', info: 'inf' };
       const SEV_PCT = { critical: 100, high: 68, medium: 42, info: 18 };
 
-      // Helper to cleanly get photos for any alert
+      // Helper to cleanly get photos for any alert (Using stable Wikimedia images directly to prevent 403 blocks)
       function getAlertImageRawUrl(a) {
-        if (a.type === 'missile') return 'https://images.unsplash.com/photo-1612845663673-c62efd48bd3c?auto=format&fit=crop&q=80&w=600';
-        if (a.type === 'explosion') return 'https://images.unsplash.com/photo-1595188846399-528859cd0bde?auto=format&fit=crop&q=80&w=600';
-        if (a.type === 'siren' || a.sev === 'critical') return 'https://images.unsplash.com/photo-1588661833722-1de2304ceade?auto=format&fit=crop&q=80&w=600';
-        if (a.type === 'warning') return 'https://images.unsplash.com/photo-1579373903781-fd5c0c30c4cd?auto=format&fit=crop&q=80&w=600';
-        return 'https://images.unsplash.com/photo-1552084117-56a98a96e191?auto=format&fit=crop&q=80&w=600';
+        if (a.type === 'missile') return 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/A_Delta_II_rocket_launches_with_the_GeoEye-1_satellite.jpg/640px-A_Delta_II_rocket_launches_with_the_GeoEye-1_satellite.jpg';
+        if (a.type === 'explosion') return 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Demining_in_Cambodia_3.jpg/640px-Demining_in_Cambodia_3.jpg';
+        if (a.type === 'siren' || a.sev === 'critical') return 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Warning_siren_in_Austerlitz.jpg/640px-Warning_siren_in_Austerlitz.jpg';
+        if (a.type === 'warning') return 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Yellow_warning_sign.svg/640px-Yellow_warning_sign.svg.png';
+        return `https://placehold.co/600x400/0c1520/0dff6e.png?text=${a.type.toUpperCase()}&font=Orbitron`;
       }
 
       // MISSILE_ROUTES
@@ -2528,12 +2530,16 @@
         const frm = document.getElementById(fId);
         if (!vid || !frm) return;
 
-        if (s.yt) {
+        if (s.ytChannel || s.yt) {
           vid.style.display = 'none';
           frm.style.display = 'block';
           if (hlsInst) { hlsInst.destroy(); hlsInst = null; }
           vid.pause();
-          frm.src = 'https://www.youtube.com/embed/' + s.yt + '?autoplay=1&mute=1';
+          if (s.ytChannel) {
+            frm.src = 'https://www.youtube.com/embed/live_stream?channel=' + s.ytChannel + '&autoplay=1&mute=1';
+          } else {
+            frm.src = 'https://www.youtube.com/embed/' + s.yt + '?autoplay=1&mute=1';
+          }
         } else {
           frm.style.display = 'none';
           frm.src = '';
