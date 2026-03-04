@@ -561,29 +561,34 @@
 
     .acard-country {
       font-family: var(--font-title);
-      font-weight: 700;
-      font-size: 12px;
-      color: var(--white);
-      letter-spacing: 1px;
+      font-weight: 900;
+      font-size: 13px;
+      color: var(--amber);
+      letter-spacing: 2px;
+      text-shadow: 0 0 10px rgba(255, 176, 32, 0.5);
     }
 
     .acard-region {
       font-family: var(--font-data);
-      font-size: 11px;
-      color: var(--dim);
-      margin-top: 1px;
+      font-size: 13px;
+      color: var(--white);
+      font-weight: 700;
+      margin-top: 2px;
     }
 
     .acard-type {
       font-family: var(--font-hud);
-      font-size: 8px;
+      font-size: 9px;
       letter-spacing: 2px;
       color: var(--red);
-      margin-top: 3px;
+      margin-top: 4px;
+      font-weight: 700;
+      text-shadow: 0 0 8px rgba(255, 32, 32, 0.6);
     }
 
     .acard.hi .acard-type {
       color: var(--amber);
+      text-shadow: 0 0 8px rgba(255, 176, 32, 0.6);
     }
 
     .acard.me .acard-type {
@@ -592,6 +597,7 @@
 
     .acard.inf .acard-type {
       color: var(--cyan);
+      text-shadow: 0 0 8px rgba(0, 207, 255, 0.5);
     }
 
     .acard-time {
@@ -603,25 +609,36 @@
       color: var(--dimmer);
     }
 
+    .acard-img {
+      width: 100%;
+      height: 80px;
+      object-fit: cover;
+      display: block;
+      margin-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 32, 32, 0.2);
+      filter: brightness(0.85) saturate(1.2);
+    }
+
     .acard-note {
       font-family: var(--font-data);
-      font-size: 10px;
-      color: var(--dimmer);
-      margin-top: 3px;
-      line-height: 1.4;
+      font-size: 11px;
+      color: var(--white);
+      font-weight: 600;
+      margin-top: 4px;
+      line-height: 1.5;
     }
 
     .acard-bar {
-      height: 2px;
-      background: rgba(255, 255, 255, .05);
-      margin-top: 6px;
+      height: 3px;
+      background: rgba(255, 255, 255, .06);
+      margin-top: 7px;
       overflow: hidden;
     }
 
     .acard-fill {
       height: 100%;
       background: linear-gradient(90deg, var(--amber), var(--red));
-      box-shadow: 0 0 4px var(--red);
+      box-shadow: 0 0 6px var(--red);
     }
 
     /* FILTER ROWS */
@@ -1954,10 +1971,10 @@
           }
         } catch (_) {
           TV_STREAMS = [
-            { lbl: 'BBC News Live', short: 'BBC', url: 'https://www.youtube.com/watch?v=9Auq9mYONFE', proxyUrl: '/proxy/stream?url=' + encodeURIComponent('https://www.youtube.com/watch?v=9Auq9mYONFE') },
-            { lbl: 'CGTN Live Feed', short: 'CGTN', url: 'https://news06.cgtn.com/news/3d3d514d7a4d444f78457a6333566d54/video.m3u8', proxyUrl: '/proxy/stream?url=' + encodeURIComponent('https://news06.cgtn.com/news/3d3d514d7a4d444f78457a6333566d54/video.m3u8') },
-            { lbl: 'DW English', short: 'DWE', url: 'https://dwstream4-lh.akamaihd.net/z/dwtv_en@124105/manifest.m3u8', proxyUrl: '/proxy/stream?url=' + encodeURIComponent('https://dwstream4-lh.akamaihd.net/z/dwtv_en@124105/manifest.m3u8') },
+            { lbl: 'Al Jazeera Arabic', short: 'AJA', url: 'https://live-hls-web-aja.getaj.net/AJA/index.m3u8', proxyUrl: '/proxy/stream?url=' + encodeURIComponent('https://live-hls-web-aja.getaj.net/AJA/index.m3u8') },
+            { lbl: 'Sky News Arabia', short: 'SKY', url: 'https://skynewsarabia.akamaized.net/hls/live/2042880/skynewsarabia/master.m3u8', proxyUrl: '/proxy/stream?url=' + encodeURIComponent('https://skynewsarabia.akamaized.net/hls/live/2042880/skynewsarabia/master.m3u8') },
             { lbl: 'France24 English', short: 'F24', url: 'https://f24hls-i.akamaihd.net/hls/live/2033925/F24_EN@526596/master.m3u8', proxyUrl: '/proxy/stream?url=' + encodeURIComponent('https://f24hls-i.akamaihd.net/hls/live/2033925/F24_EN@526596/master.m3u8') },
+            { lbl: 'DW English', short: 'DWE', url: 'https://dwstream4-lh.akamaihd.net/z/dwtv_en@124105/manifest.m3u8', proxyUrl: '/proxy/stream?url=' + encodeURIComponent('https://dwstream4-lh.akamaihd.net/z/dwtv_en@124105/manifest.m3u8') },
           ];
           buildTVList();
           startHLS(TV_STREAMS[0].proxyUrl || TV_STREAMS[0].url, 'desk-tv');
@@ -2124,12 +2141,18 @@
         explode() {
           this.alive = false;
           try { mapL.removeLayer(this.dotM); mapL.removeLayer(this.lineM); if (this.radiusCircle) mapL.removeLayer(this.radiusCircle); } catch (_) { }
-          // Real missile impact - no respawning, only real detections trigger new ones
+          // Demo missile respawns endlessly to prove UI functionality
+          if (this.r.name === 'Qassam' && this.r.lbl === 'Gaza Strip → Tel Aviv') setTimeout(() => missileObjs.push(new MissileObj(this.r)), 3000);
+          if (this.r.name === 'Shahab-3' && this.r.lbl === 'Iran → Israel') setTimeout(() => missileObjs.push(new MissileObj(this.r)), 8000);
         }
       }
 
       function initMissiles() {
-        // Real missiles spawn from OREF alerts via fetchRealMissiles()
+        // Core 2 Demo Missiles requested by user
+        if (filters.inflight) {
+          missileObjs.push(new MissileObj(MISSILE_ROUTES[0])); // Gaza -> Tel Aviv
+          missileObjs.push(new MissileObj(MISSILE_ROUTES[4])); // Iran -> Israel
+        }
       }
       function animLoop() {
         missileObjs = missileObjs.filter(m => m.alive);
@@ -2355,7 +2378,15 @@
             const col = SEV_COL[a.sev] || '#00cfff';
             const d = document.createElement('div'); d.className = `acard ${cls}`;
             if (isNew) d.style.background = 'rgba(255,32,32,0.08)';
-            d.innerHTML = `<div class="acard-flash"></div>
+
+            // Generate visual context photos depending on threat
+            let imgH = '';
+            if (a.type === 'missile') imgH = '<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Fateh_110_%28cropped%29.jpg/320px-Fateh_110_%28cropped%29.jpg" class="acard-img">';
+            else if (a.type === 'explosion') imgH = '<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Explosion_at_the_Al-Askari_Mosque.jpg/320px-Explosion_at_the_Al-Askari_Mosque.jpg" class="acard-img">';
+            else if (a.type === 'siren' || a.sev === 'critical') imgH = '<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Air_raid_siren_in_Tel_Aviv.jpg/320px-Air_raid_siren_in_Tel_Aviv.jpg" class="acard-img">';
+            else imgH = '<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/IDF_soldier_with_Tavor.jpg/320px-IDF_soldier_with_Tavor.jpg" class="acard-img">';
+
+            d.innerHTML = `${imgH}<div class="acard-flash"></div>
         <div class="acard-country">${a.country}${a.real ? ' <span style="color:var(--red);font-size:7px">● LIVE</span>' : ''}</div>
         <div class="acard-region">${a.region}</div>
         <div class="acard-type">${a.type.toUpperCase()} // ${a.sev.toUpperCase()} // ×${a.n}</div>
@@ -2380,13 +2411,16 @@
               const col = SEV_COL[a.sev] || '#00cfff';
               const ts = new Date().toTimeString().slice(0, 8);
               const isNew = (Date.now() - a.ts) < 5000;
+              const imgH = a.type === 'missile' ? '<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Fateh_110_%28cropped%29.jpg/320px-Fateh_110_%28cropped%29.jpg" style="width:100%;height:60px;object-fit:cover;margin-bottom:6px">' : a.type === 'explosion' ? '<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Explosion_at_the_Al-Askari_Mosque.jpg/320px-Explosion_at_the_Al-Askari_Mosque.jpg" style="width:100%;height:60px;object-fit:cover;margin-bottom:6px">' : a.type === 'siren' || a.sev === 'critical' ? '<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Air_raid_siren_in_Tel_Aviv.jpg/320px-Air_raid_siren_in_Tel_Aviv.jpg" style="width:100%;height:60px;object-fit:cover;margin-bottom:6px">' : '';
+
               return `<div style="background:${isNew ? 'rgba(255,32,32,0.1)' : 'var(--bg3)'};border:1px solid var(--border);border-left:3px solid ${col};padding:10px;margin:6px 0;cursor:pointer;transition:all .2s" onclick="mapL.flyTo([${a.lat},${a.lng}],9,{duration:1.2})">
-          <div style="font-family:var(--font-title);font-size:12px;color:${col};letter-spacing:1px">${a.country}${a.real ? ' 🔴' : ''}${isNew ? ' ⚡' : ''}</div>
-          <div style="font-family:var(--font-data);font-size:11px;color:var(--dim);margin-top:2px">${a.region}</div>
-          <div style="font-family:var(--font-hud);font-size:9px;color:${col};margin-top:3px;text-transform:uppercase;letter-spacing:1px">${a.type} • ${a.sev}</div>
-          <div style="font-family:var(--font-data);font-size:10px;color:var(--dimmer);margin-top:4px;line-height:1.3">${a.note.substring(0, 60)}${a.note.length > 60 ? '...' : ''}</div>
-          <div style="font-family:var(--font-hud);font-size:8px;color:var(--dimmer);margin-top:4px">${ts}</div>
-        </div>`;
+                ${imgH}
+                <div style="font-family:var(--font-title);font-weight:900;font-size:13px;color:${col};letter-spacing:2px;text-shadow:0 0 10px ${col}">${a.country}${a.real ? ' 🔴' : ''}${isNew ? ' ⚡' : ''}</div>
+                <div style="font-family:var(--font-data);font-size:13px;color:var(--white);font-weight:700;margin-top:2px">${a.region}</div>
+                <div style="font-family:var(--font-hud);font-size:9px;color:${col};margin-top:4px;font-weight:700;text-transform:uppercase;letter-spacing:2px;text-shadow:0 0 8px ${col}">${a.type} • ${a.sev}</div>
+                <div style="font-family:var(--font-data);font-size:11px;color:var(--white);font-weight:600;margin-top:5px;line-height:1.4">${a.note}</div>
+                <div style="font-family:var(--font-hud);font-size:8px;color:var(--dimmer);margin-top:4px">${ts}</div>
+              </div>`;
             }).join('');
           }
         }

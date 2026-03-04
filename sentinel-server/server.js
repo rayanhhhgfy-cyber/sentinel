@@ -68,11 +68,11 @@ app.get('/api/planes', async (req, res) => {
 const RSS_FEEDS = [
   { name: 'الجزيرة عربي', url: 'https://www.aljazeera.net/xmlarss/mostread.xml' },
   { name: 'Al Jazeera EN', url: 'https://www.aljazeera.com/xml/rss/all.xml' },
-  { name: 'BBC Arabic',    url: 'https://feeds.bbci.co.uk/arabic/rss.xml' },
-  { name: 'العربية',       url: 'https://www.alarabiya.net/tools/rss' },
+  { name: 'BBC Arabic', url: 'https://feeds.bbci.co.uk/arabic/rss.xml' },
+  { name: 'العربية', url: 'https://www.alarabiya.net/tools/rss' },
   { name: 'Sky News Arabia', url: 'https://www.skynewsarabia.com/web/rss' },
-  { name: 'RT Arabic',    url: 'https://arabic.rt.com/rss/' },
-  { name: 'Reuters',      url: 'https://feeds.reuters.com/reuters/worldNews' },
+  { name: 'RT Arabic', url: 'https://arabic.rt.com/rss/' },
+  { name: 'Reuters', url: 'https://feeds.reuters.com/reuters/worldNews' },
 ];
 
 let newsCache = { items: [], ts: 0 };
@@ -94,14 +94,14 @@ app.get('/api/news', async (req, res) => {
         const title = typeof item.title === 'string' ? item.title : item.title?._ || '';
         if (title && title.length > 5) all.push({ title: title.trim(), source: feed.name });
       });
-    } catch (_) {}
+    } catch (_) { }
   }
   if (all.length > 0) newsCache = { items: all, ts: now };
   res.json({ items: newsCache.items.length ? newsCache.items : all });
 });
 
 // HLS Proxy
-const ALLOWED = ['youtube.com','gdpr.akamaihd.net','dwstream','news06.cgtn.com','f24hls-i.akamaihd.net','getaj.net','akamaihd.net','ercdn.net','skynewsarabia.com','bbci.co.uk'];
+const ALLOWED = ['youtube.com', 'gdpr.akamaihd.net', 'dwstream', 'news06.cgtn.com', 'f24hls-i.akamaihd.net', 'getaj.net', 'akamaihd.net', 'ercdn.net', 'skynewsarabia.com', 'bbci.co.uk'];
 
 app.get('/proxy/stream', async (req, res) => {
   const target = req.query.url;
@@ -131,10 +131,10 @@ app.get('/proxy/stream', async (req, res) => {
 });
 
 const STREAMS = [
-  { lbl: 'BBC News Live', short: 'BBC', url: 'https://www.youtube.com/watch?v=9Auq9mYONFE' },
-  { lbl: 'CGTN Live Feed', short: 'CGTN', url: 'https://news06.cgtn.com/news/3d3d514d7a4d444f78457a6333566d54/video.m3u8' },
-  { lbl: 'DW English', short: 'DWE', url: 'https://dwstream4-lh.akamaihd.net/z/dwtv_en@124105/manifest.m3u8' },
+  { lbl: 'Al Jazeera Arabic', short: 'AJA', url: 'https://live-hls-web-aja.getaj.net/AJA/index.m3u8' },
+  { lbl: 'Sky News Arabia', short: 'SKY', url: 'https://skynewsarabia.akamaized.net/hls/live/2042880/skynewsarabia/master.m3u8' },
   { lbl: 'France24 English', short: 'F24', url: 'https://f24hls-i.akamaihd.net/hls/live/2033925/F24_EN@526596/master.m3u8' },
+  { lbl: 'DW English', short: 'DWE', url: 'https://dwstream4-lh.akamaihd.net/z/dwtv_en@124105/manifest.m3u8' },
 ];
 
 app.get('/api/streams', (req, res) => {
@@ -149,7 +149,7 @@ app.get('/api/missiles', async (req, res) => {
   if (missileCache.data.length > 0 && now - missileCache.ts < 5000) {
     return res.json({ missiles: missileCache.data });
   }
-  
+
   const missiles = [];
   try {
     // Get real OREF alerts
@@ -170,7 +170,7 @@ app.get('/api/missiles', async (req, res) => {
             { name: 'Iran', coord: [35.68, 51.38] },
             { name: 'Yemen', coord: [15.35, 44.20] }
           ];
-          
+
           alerts.data.forEach((region, idx) => {
             if (idx < 3) { // Limit to 3 simultaneously
               const targetCoord = [31.5 + Math.random() * 2, 34.5 + Math.random() * 1.5];
@@ -188,10 +188,10 @@ app.get('/api/missiles', async (req, res) => {
             }
           });
         }
-      } catch (_) {}
+      } catch (_) { }
     }
-  } catch (_) {}
-  
+  } catch (_) { }
+
   missileCache = { data: missiles, ts: now };
   res.json({ missiles, count: missiles.length });
 });
@@ -254,52 +254,79 @@ const JORDAN_LOCATION_KEYWORDS = {
 
 let jordanCache = { alerts: [], ts: 0 };
 
+// SPORTS & ENTERTAINMENT EXCLUSION — titles matching these are NEVER security alerts
+const SPORTS_EXCLUSION = {
+  ar: ['كأس العالم', 'مونديال', 'كرة القدم', 'دوري', 'فريق', 'لاعب', 'مباراة', 'مباريات', 'ملعب', 'نادي', 'أهداف', 'هدف', 'تسجيل', 'بطولة', 'دور ربع', 'نهائي', 'تصفيات', 'تدريب رياضي', 'اتحاد', 'منتخب', 'حكم', 'ضربة جزاء', 'ركلة', 'تتويج', 'ميدالية', 'أولمبياد', 'سباق', 'تنس', 'سلة', 'يد', 'كرة يد', 'جمباز', 'سباحة', 'رياضة', 'ألعاب قوى', 'ماراثون', 'درب', 'مهرجان', 'موسيقى', 'فن', 'أغنية', 'مطرب', 'مسلسل', 'فيلم', 'سينما', 'مسرح', 'برنامج', 'حفل', 'نجوم', 'أكاديمية', 'إعلام', 'قناة رياضية', 'اقتصاد', 'بورصة', 'أسهم', 'بنك', 'شركة', 'اجتماع', 'مؤتمر', 'ندوة', 'طقس', 'مناخ', 'زراعة', 'محصول', 'رحلة', 'سياحة', 'انتخاب', 'رئيس', 'حكومة', 'تشريع', 'قانون', 'ميزانية', 'مشروع'],
+  en: ['world cup', 'football', 'soccer', 'basketball', 'tennis', 'rugby', 'cricket', 'baseball', 'golf', 'swimming', 'athletics', 'marathon', 'olympic', 'championship', 'league', 'cup final', 'semi-final', 'quarter-final', 'match', 'game', 'player', 'coach', 'team', 'goal', 'score', 'tournament', 'trophy', 'medal', 'sport', 'concert', 'music', 'film', 'movie', 'cinema', 'festival', 'album', 'singer', 'actor', 'economy', 'stocks', 'market', 'budget', 'finance', 'bank', 'invest', 'election', 'vote', 'president', 'parliament', 'law', 'weather', 'climate', 'agriculture', 'harvest', 'tourism', 'travel', 'celebrity']
+};
+
+function isSportsFalsePositive(title) {
+  const tl = title.toLowerCase();
+  return SPORTS_EXCLUSION.ar.some(k => title.includes(k)) ||
+    SPORTS_EXCLUSION.en.some(k => tl.includes(k));
+}
+
 function classifyJordanAlert(title) {
   const titleLower = title.toLowerCase();
-  
+
+  // BLOCK sports/entertainment/economy false positives first
+  if (isSportsFalsePositive(title)) return null;
+
   // Check for chemical/nuclear (highest severity)
-  if (JORDAN_KEYWORDS.ar.chemical && JORDAN_KEYWORDS.ar.chemical.some(k => title.includes(k)) || 
-      JORDAN_KEYWORDS.en.chemical && JORDAN_KEYWORDS.en.chemical.some(k => titleLower.includes(k))) {
+  if (JORDAN_KEYWORDS.ar.chemical && JORDAN_KEYWORDS.ar.chemical.some(k => title.includes(k)) ||
+    JORDAN_KEYWORDS.en.chemical && JORDAN_KEYWORDS.en.chemical.some(k => titleLower.includes(k))) {
     return { type: 'explosion', severity: 'critical' };
   }
 
-  // Check for explosion (highest severity)
-  if (JORDAN_KEYWORDS.ar.explosion.some(k => title.includes(k)) || 
-      JORDAN_KEYWORDS.en.explosion.some(k => titleLower.includes(k))) {
+  // Check for explosion (highest severity) — must have SPECIFIC blast/bomb words
+  if (JORDAN_KEYWORDS.ar.explosion.some(k => title.includes(k)) ||
+    JORDAN_KEYWORDS.en.explosion.some(k => titleLower.includes(k))) {
     return { type: 'explosion', severity: 'critical' };
   }
-  
+
   // Check for siren (critical)
-  if (JORDAN_KEYWORDS.ar.siren.some(k => title.includes(k)) || 
-      JORDAN_KEYWORDS.en.siren.some(k => titleLower.includes(k))) {
+  if (JORDAN_KEYWORDS.ar.siren.some(k => title.includes(k)) ||
+    JORDAN_KEYWORDS.en.siren.some(k => titleLower.includes(k))) {
     return { type: 'siren', severity: 'critical' };
   }
-  
+
   // Check for missile (critical)
-  if (JORDAN_KEYWORDS.ar.missile.some(k => title.includes(k)) || 
-      JORDAN_KEYWORDS.en.missile.some(k => titleLower.includes(k))) {
+  if (JORDAN_KEYWORDS.ar.missile.some(k => title.includes(k)) ||
+    JORDAN_KEYWORDS.en.missile.some(k => titleLower.includes(k))) {
     return { type: 'missile', severity: 'critical' };
   }
-  
-  // Check for security incident (high)
-  if (JORDAN_KEYWORDS.ar.security.some(k => title.includes(k)) || 
-      JORDAN_KEYWORDS.en.security.some(k => titleLower.includes(k))) {
+
+  // Security ONLY fires if ALSO has a real threat-adjacent word
+  const hasThreatWord = [...JORDAN_KEYWORDS.ar.warning, ...JORDAN_KEYWORDS.en.warning,
+  ...JORDAN_KEYWORDS.ar.explosion, ...JORDAN_KEYWORDS.en.explosion]
+    .some(k => title.includes(k) || titleLower.includes(k));
+  if (hasThreatWord && (JORDAN_KEYWORDS.ar.security.some(k => title.includes(k)) ||
+    JORDAN_KEYWORDS.en.security.some(k => titleLower.includes(k)))) {
     return { type: 'intel', severity: 'high' };
   }
-  
+
+  // Check for warning/attack (high) — but only specific violent words
+  const specificWarning = [
+    'هجوم مسلح', 'هجوم إرهابي', 'عملية إرهابية', 'تفجير إرهابي', 'اغتيال', 'مجزرة', 'مذبحة', 'قصف',
+    'armed attack', 'terrorist attack', 'assassination', 'massacre', 'bombing attack', 'shelling', 'gunfire'
+  ];
+  if (specificWarning.some(k => title.includes(k) || titleLower.includes(k))) {
+    return { type: 'intel', severity: 'high' };
+  }
+
   // Check for warning/attack (high)
-  if (JORDAN_KEYWORDS.ar.warning.some(k => title.includes(k)) || 
-      JORDAN_KEYWORDS.en.warning.some(k => titleLower.includes(k))) {
+  if (JORDAN_KEYWORDS.ar.warning.some(k => title.includes(k)) ||
+    JORDAN_KEYWORDS.en.warning.some(k => titleLower.includes(k))) {
     return { type: 'intel', severity: 'high' };
   }
-  
+
   // If Jordan location is mentioned — report as info
-  const hasLocation = JORDAN_LOCATION_KEYWORDS.ar.some(k => title.includes(k)) || 
-                      JORDAN_LOCATION_KEYWORDS.en.some(k => titleLower.includes(k));
+  const hasLocation = JORDAN_LOCATION_KEYWORDS.ar.some(k => title.includes(k)) ||
+    JORDAN_LOCATION_KEYWORDS.en.some(k => titleLower.includes(k));
   if (hasLocation) {
     return { type: 'intel', severity: 'info' };
   }
-  
+
   return null;
 }
 
@@ -337,36 +364,36 @@ app.get('/api/jordan', async (req, res) => {
   if (jordanCache.alerts.length > 0 && now - jordanCache.ts < 20000) {
     return res.json({ alerts: jordanCache.alerts });
   }
-  
+
   const allAlerts = [];
   const seenTitles = new Set();
-  
+
   for (const feed of JORDAN_FEEDS) {
     try {
       const r = await fetchURL(feed.url);
       if (r.status !== 200) continue;
-      
+
       try {
         const parsed = await parseStringPromise(r.body.toString('utf8'), { explicitArray: false });
         const items = parsed?.rss?.channel?.item || [];
         const arr = Array.isArray(items) ? items : [items];
-        
+
         arr.slice(0, 60).forEach(item => {
           const title = typeof item.title === 'string' ? item.title : item.title?._ || '';
           const desc = typeof item.description === 'string' ? item.description : item.description?._ || '';
           const pubDate = typeof item.pubDate === 'string' ? item.pubDate : item.pubDate?._ || '';
           const combined = title + ' ' + desc;
-          
+
           if (!title || title.length < 5) return;
           // Avoid duplicates
           if (seenTitles.has(title)) return;
           seenTitles.add(title);
-          
+
           // Check if content mentions Jordan (in title or desc)
           const hasJordanRef = JORDAN_LOCATION_KEYWORDS.ar.some(k => combined.includes(k)) ||
-                               JORDAN_LOCATION_KEYWORDS.en.some(k => combined.toLowerCase().includes(k));
+            JORDAN_LOCATION_KEYWORDS.en.some(k => combined.toLowerCase().includes(k));
           if (!hasJordanRef) return;
-          
+
           const classification = classifyJordanAlert(combined);
           if (classification) {
             const coords = getJordanCoords(combined);
@@ -383,14 +410,14 @@ app.get('/api/jordan', async (req, res) => {
             });
           }
         });
-      } catch (_) {}
-    } catch (_) {}
+      } catch (_) { }
+    } catch (_) { }
   }
-  
+
   // Sort by time (newest first) and limit to 30
   allAlerts.sort((a, b) => new Date(b.time) - new Date(a.time));
   const topAlerts = allAlerts.slice(0, 30);
-  
+
   jordanCache = { alerts: topAlerts, ts: now };
   res.json({ alerts: topAlerts });
 });
